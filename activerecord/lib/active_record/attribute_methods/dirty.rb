@@ -38,22 +38,31 @@ module ActiveRecord
         end
       end
 
-    private
       # Wrap write_attribute to remember original attribute value.
       def write_attribute(attr, value)
-        attr = attr.to_s
+        set_original_value(attr)
+        super
+      end
 
-        # The attribute already has an unsaved change.
-        if attribute_changed?(attr)
-          old = changed_attributes[attr]
-          changed_attributes.delete(attr) unless _field_changed?(attr, old, value)
-        else
-          old = clone_attribute_value(:read_attribute, attr)
-          changed_attributes[attr] = old if _field_changed?(attr, old, value)
+      def read_attribute(attr)
+        super.tap { |value|
+          set_original_value(attr, value) if attr && attribute_names.include?(attr)
+        }
+      end
+
+    private
+      # def set_original_value(attr)
+
+      #   #NOTE: this changes it - and that is bad
+      #   original_values[attr] = clone_attribute_value(:read_attribute, attr)
+      # end
+
+      def attribute_change(attr)
+        if original_values.key?(attr.to_s)
+          old = original_values[attr.to_s]
+          value = __send__(attr)
+          [old, value] if _field_changed?(attr, old, value)
         end
-
-        # Carry on.
-        super(attr, value)
       end
 
       def update_record(*)
