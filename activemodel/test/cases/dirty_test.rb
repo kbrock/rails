@@ -83,14 +83,17 @@ class DirtyTest < ActiveModel::TestCase
     assert_not_nil @model.changes['name']
   end
 
+  #TOOD: fix this
   test "attribute mutation" do
     @model.instance_variable_set("@name", "Yam")
+    @model.name = "Yam"
     assert !@model.name_changed?
     @model.name.replace("Hadad")
-    assert !@model.name_changed?
-    @model.name_will_change!
+    assert @model.name_changed?
     @model.name.replace("Baal")
     assert @model.name_changed?
+    @model.name = "Yam"
+    assert !@model.name_changed?
   end
 
   test "resetting attribute" do

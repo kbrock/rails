@@ -248,7 +248,7 @@ module ActiveRecord
 
       run_callbacks(:initialize) unless _initialize_callbacks.empty?
 
-      @changed_attributes = {}
+      reset_changes
       init_changed_attributes
 
       @aggregation_cache = {}
@@ -440,8 +440,7 @@ module ActiveRecord
       # Intentionally avoid using #column_defaults since overridden defaults (as is done in
       # optimistic locking) won't get written unless they get marked as changed
       self.class.columns.each do |c|
-        attr, orig_value = c.name, c.default
-        changed_attributes[attr] = orig_value if _field_changed?(attr, orig_value, @attributes[attr])
+        set_original_value(c.name, c.default)
       end
     end
 
