@@ -48,6 +48,9 @@ module ActiveRecord
         super.tap { |value|
           if attr && attribute_names.include?(attr.to_s)
             set_original_value(attr, value)
+          else
+            #binding.pry unless attr.blank? || attr.to_s =~ /_count$/
+            puts "skippig over #{attr} (was used to read)" unless attr.blank? || attr.to_s =~ /_count$/
           end
         }
       end
