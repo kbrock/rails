@@ -181,7 +181,7 @@ module ActiveRecord
       became = klass.new
       became.instance_variable_set("@attributes", @attributes)
       became.instance_variable_set("@attributes_cache", @attributes_cache)
-      became.instance_variable_set("@changed_attributes", @changed_attributes) if defined?(@changed_attributes)
+      became.instance_variable_set("@original_values", @original_values) if defined?(@original_values)
       became.instance_variable_set("@new_record", new_record?)
       became.instance_variable_set("@destroyed", destroyed?)
       became.instance_variable_set("@errors", errors)
@@ -443,7 +443,7 @@ module ActiveRecord
 
         changes[self.class.locking_column] = increment_lock if locking_enabled?
 
-        changed_attributes.except!(*changes.keys)
+        original_values.except!(*changes.keys)
         primary_key = self.class.primary_key
         self.class.unscoped.where(primary_key => self[primary_key]).update_all(changes) == 1
       end
