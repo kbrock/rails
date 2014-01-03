@@ -172,6 +172,7 @@ module ActiveModel
 
     # Handle <tt>*_was</tt> for +method_missing+.
     def attribute_was(attr) # :nodoc:
+      attr = attr.to_s
       original_values.key?(attr) ? original_values[attr] : set_original_value(attr)
     end
 
@@ -195,6 +196,7 @@ module ActiveModel
 
       # Handle <tt>*_change</tt> for +method_missing+.
       def attribute_change(attr)
+        attr = attr.to_s
         if original_values.key?(attr)
           old = original_values[attr]
           value = __send__(attr)
@@ -210,6 +212,7 @@ module ActiveModel
           value = __send__(attr) if value == :not_defined
           value = value.duplicable? ? value.clone : value
         rescue TypeError, NoMethodError
+          puts "type err #{attr}=#{value}"
         end
 
         original_values[attr] = value == :not_defined ? nil : value

@@ -46,7 +46,9 @@ module ActiveRecord
 
       def read_attribute(attr)
         super.tap { |value|
-          set_original_value(attr, value) if attr && attribute_names.include?(attr)
+          if attr && attribute_names.include?(attr.to_s)
+            set_original_value(attr, value)
+          end
         }
       end
 
@@ -58,8 +60,9 @@ module ActiveRecord
       # end
 
       def attribute_change(attr)
-        if original_values.key?(attr.to_s)
-          old = original_values[attr.to_s]
+        attr = attr.to_s
+        if original_values.key?(attr)
+          old = original_values[attr]
           value = __send__(attr)
           [old, value] if _field_changed?(attr, old, value)
         end
