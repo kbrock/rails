@@ -89,7 +89,7 @@ module ActiveRecord
           end
         end
 
-        old != value
+        old.hash != value.hash
       end
 
       def changes_from_nil_to_empty_string?(column, old, value)
