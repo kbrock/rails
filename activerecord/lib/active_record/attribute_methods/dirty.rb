@@ -56,11 +56,12 @@ module ActiveRecord
       end
 
     private
-      # def set_original_value(attr)
+      def set_original_value(attr, value=:not_defined)
+        attr = attr.to_s
+        return if attr == "" || original_values.key?(attr)
 
-      #   #NOTE: this changes it - and that is bad
-      #   original_values[attr] = clone_attribute_value(:read_attribute, attr)
-      # end
+        original_values[attr] = value == :not_defined ? clone_attribute_value(:read_attribute, attr) : value
+      end
 
       def attribute_change(attr)
         attr = attr.to_s
