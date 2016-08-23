@@ -276,9 +276,6 @@ module ActiveRecord
 
     def _select!(*fields) # :nodoc:
       fields.flatten!
-      fields.map! do |field|
-        klass.attribute_alias?(field) ? klass.attribute_alias(field).to_sym : field
-      end
       self.select_values += fields
       self
     end
@@ -1089,16 +1086,19 @@ module ActiveRecord
 
     def build_select(arel)
       if select_values.any?
-        arel.project(*arel_columns(select_values.uniq))
+        arel.project(*arel_columns(select_values.uniq, true))
       else
         arel.project(@klass.arel_table[Arel.star])
       end
     end
 
-    def arel_columns(columns)
+    def arel_columns(columns, add_alias = false)
       columns.map do |field|
         if (Symbol === field || String === field) && (klass.has_attribute?(field) || klass.attribute_alias?(field)) && !from_clause.value
-          arel_attribute(field)
+          a = arel_attribute(field)
+          a.kind_of?(Arel::Attributes::Attribute) || !add_alias ? a : a.as(field.to_s)
+        elsif klass.attribute_alias?(field)
+          connection.quote_table_name(klass.attribute_alias(field))
         elsif Symbol === field
           connection.quote_table_name(field.to_s)
         else
