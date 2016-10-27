@@ -12,9 +12,22 @@ module ActiveRecord
       ActiveRecord::RuntimeRegistry.sql_runtime ||= 0
     end
 
+    def self.count=(value)
+      ActiveRecord::RuntimeRegistry.sql_count = value
+    end
+
+    def self.count
+      ActiveRecord::RuntimeRegistry.sql_count ||= 0
+    end
+
     def self.reset_runtime
       rt, self.runtime = runtime, 0
       rt
+    end
+
+    def self.reset_count
+      ct, self.count = count, 0
+      ct
     end
 
     def sql(event)
@@ -24,6 +37,8 @@ module ActiveRecord
       payload = event.payload
 
       return if IGNORE_PAYLOAD_NAMES.include?(payload[:name])
+
+      self.class.count += 1 unless payload[:cached]
 
       name  = "#{payload[:name]} (#{event.duration.round(1)}ms)"
       name  = "CACHE #{name}" if payload[:cached]

@@ -13,6 +13,7 @@ module ActiveRecord
     protected
 
       attr_internal :db_runtime
+      attr_internal :db_count
 
     private
 
@@ -27,10 +28,14 @@ module ActiveRecord
       def cleanup_view_runtime
         if logger && logger.info? && ActiveRecord::Base.connected?
           db_rt_before_render = ActiveRecord::LogSubscriber.reset_runtime
+          db_count_rt_before_render = ActiveRecord::LogSubscriber.reset_count
           self.db_runtime = (db_runtime || 0) + db_rt_before_render
+          self.db_count = (db_count || 0) + db_count_rt_before_render
           runtime = super
           db_rt_after_render = ActiveRecord::LogSubscriber.reset_runtime
+          db_count_rt_after_render = ActiveRecord::LogSubscriber.reset_count
           self.db_runtime += db_rt_after_render
+          self.db_count += db_count_rt_after_render
           runtime - db_rt_after_render
         else
           super
@@ -40,14 +45,17 @@ module ActiveRecord
       def append_info_to_payload(payload)
         super
         if ActiveRecord::Base.connected?
-          payload[:db_runtime] = (db_runtime || 0) + ActiveRecord::LogSubscriber.reset_runtime
+          runtime = ActiveRecord::LogSubscriber.reset_runtime
+          count = ActiveRecord::LogSubscriber.reset_count
+          payload[:db_runtime] = (db_runtime || 0) + runtime
+          payload[:db_count] = (db_count || 0) + count
         end
       end
 
       module ClassMethods # :nodoc:
         def log_process_action(payload)
-          messages, db_runtime = super, payload[:db_runtime]
-          messages << ("ActiveRecord: %.1fms" % db_runtime.to_f) if db_runtime
+          messages, db_runtime, db_count = super, payload[:db_runtime], payload[:db_count]
+          messages << ("ActiveRecord: %d queries %.1fms" % [db_count, db_runtime.to_f]) if db_runtime
           messages
         end
       end
